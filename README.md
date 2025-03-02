@@ -2,14 +2,21 @@
 
 ## Descrição
 
-A classe `parsing` foi desenvolvida para filtrar e extrair combinações de **email/senha** a partir de wordlists que não possuem um padrão fixo e definido. Diferente de filtros simples, essa classe permite identificar padrões mistos e inconsistentes, facilitando a extração de credenciais válidas em grandes volumes de dados.
+A classe `parsing` foi desenvolvida para filtrar e extrair combinações de **email/senha** a partir de wordlists que não possuem um padrão fixo e definido. Diferente de filtros simples, essa classe permite identificar padrões mistos e inconsistentes, facilitando a extração de credenciais em grandes volumes de dados sem padrão.
 
 O algoritmo é capaz de identificar e extrair credenciais em diversos formatos, como:
-- `email<limiteador>senha`
-- `senha<limiteador>email`
-- `email<limiteador>email<limiteador2>senha`
-- `email<limiteador>senha<limiteador2>email`
-- `senha<limiteador>email<limiteador2>email`
+
+```
+┌─[user@debian]─[~]
+└──╼ $ cat dados.txt 
+email@email.com P@ssw0rd123
+P@ssw0rd123:email@email.com
+email@email.com:email2@email2.net;P@ssw0rd123
+email@email.com|P@ssw0rd123|email@email.com
+P@ssw0rd123 email@email.com email@email.com
+```
+
+
 
 ## Funcionalidades
 
@@ -41,14 +48,17 @@ from parsing import parsing
 parser = parsing()
 ```
 
-3. **Chame o método `parse()` para processar uma linha de wordlist:**
+3. **Chame o método `parse()` para processar a linha de sua wordlist:**
 
 ```python
-email1, email2, senha = parser.parse("exemplo@email.com:senha123")
-print(email1, email2, senha)
+with open("wordlist.txt", "r") as f:
+    for line in f:
+        email1, email2, senha = parser.parse(line)
+        print(email1, email2, senha)
+
 ```
 
-🔹 **Saída:**
+🔹 **Saída:** a função retorna 3 valores <email> <email> <senha>
 ```
 exemplo@email.com None senha123
 ```
