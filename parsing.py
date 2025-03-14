@@ -32,6 +32,7 @@ class parsing():
 		chars = "abcdefghijklmnopqrstuvwxyz.-0123456789"
 		prots = ["http://","https://","ftp://","www.", "android://", "smtp://", "imap://", "oauth://", "moz-proxy://", "chrome-extension://", "mailbox://"]
 		limiters = [":", " ", "|", ";", "\n"]
+		blackURL = [ '"','<', '>', '\\', '{', '}', '^', '|', '[', ']', '`', ' ', '\t', '\n', '\r']
 
 		link = None
 
@@ -39,28 +40,47 @@ class parsing():
 		for prot in prots:
 			if prot in line:
 				base = line.split(prot)[1]
+#				print(base)
 				for lim in limiters:
+					newLine = False
+#					print(base.replace("\n", ""), "->", lim)
 					if lim in base:
 						rawLink = base.split(lim)[0]
+
 						link = self.parseLink(rawLink)
+
+						isLink = True
+						for blackChar in blackURL:
+							if blackChar in link:
+								isLink = False
+								break
+
+						if isLink == False:
+							continue
+
+#						print(base.replace("\n", ""), "|", rawLink, "->", lim)
+
 						if f"{prot}{rawLink}{lim}" in line:
 							newLine = line.replace(f"{prot}{rawLink}{lim}", "")
 						elif f"{lim}{prot}{rawLink}" in line:
 							newLine = line.replace(f"{lim}{prot}{rawLink}", "")
+						elif f"{prot}{rawLink}" in line:
+							newLine = line.replace(f"{prot}{rawLink}", "")
 
-						else:
-							break
+#						else:
+#							break
 
 						if prot == "android://":
 							try:
 								link = link.split("@")[1]
 							except IndexError:
 								None
+						if newLine != False:
+#							print(newLine)
+							return prot, link, newLine
 
-						return prot, link, newLine
-						break
 
-				break
+#				break
 
 			else:
 				c += 1
