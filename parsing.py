@@ -19,8 +19,88 @@ class parsing():
 
 		return False
 
+
+	def parseLink(self, base):
+		if "/" in base:
+			domain = base.split("/")[0]
+			uri = base.split(f"{domain}/")[1]
+			return domain.lower() + "/" + uri
+
+		return base.lower()
+
+	def getLink(self, line):
+		chars = "abcdefghijklmnopqrstuvwxyz.-0123456789"
+		prots = ["http://","https://","ftp://","www.", "android://", "smtp://", "imap://", "oauth://", "moz-proxy://", "chrome-extension://", "mailbox://"]
+		limiters = [":", " ", "|", ";", "\n"]
+
+		link = None
+
+		c = 0
+		for prot in prots:
+			if prot in line:
+				base = line.split(prot)[1]
+				for lim in limiters:
+					if lim in base:
+						rawLink = base.split(lim)[0]
+						link = self.parseLink(rawLink)
+						if f"{prot}{rawLink}{lim}" in line:
+							newLine = line.replace(f"{prot}{rawLink}{lim}", "")
+						elif f"{lim}{prot}{rawLink}" in line:
+							newLine = line.replace(f"{lim}{prot}{rawLink}", "")
+
+						else:
+							break
+
+						if prot == "android://":
+							try:
+								link = link.split("@")[1]
+							except IndexError:
+								None
+
+						return prot, link, newLine
+						break
+
+				break
+
+			else:
+				c += 1
+
+		if c == len(prots):
+			for lim in limiters:
+				if lim in line:
+					uri = ""
+
+					base = line.split(lim)[0]
+					domain = base
+					if base[:2] == "//":
+						domain = base[2:]
+
+					if "/" in base:
+						domain = base.split("/")[0]
+						uri = "/" + base.split("/")[1]
+
+
+					if len(domain.split(".")) >= 2 and len(domain.split(".")) <= 4:
+						ok = True
+						for char in domain:
+							if char not in chars:
+								ok = False
+								break
+
+						if ok:
+							link = domain.lower() + uri
+							newLine = line.replace(domain + uri + lim, "")
+							return prot, link, newLine
+
+		return None, link, line
+
 	def parse(self, line):
-		line = line.replace("\n", "")
+		prot, link, newLine = self.getLink(line)
+
+		if link != None:
+			line = newLine
+
+		line.replace("\n", "")
 
 		limiters = {
 			":":";",  # check ?:? and ?:?;?
@@ -36,10 +116,12 @@ class parsing():
 			email2 = None
 			passwd = None
 
+
 			lim1 = k
 			lim2 = limiters[k]
 
 			try:
+
 				if lim1 in line and lim1+lim2 not in line: # if ?:?
 					vals = line.split(lim1)
 
@@ -92,6 +174,7 @@ class parsing():
 #				print(e)
 				continue
 
+
 		if email1 != None or email2 != None:
 			if passwd != None:
 				try:
@@ -105,6 +188,6 @@ class parsing():
 				except (TypeError, IndexError):
 					None
 
-				return email1, email2, passwd
+				return prot, link, email1, email2, passwd
 
-		return None, None, None
+		return None, None, None, None, None
