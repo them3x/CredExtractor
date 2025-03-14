@@ -1,84 +1,93 @@
 # CredExtractor
 
-## Descrição
+**CredExtractor** é uma ferramenta em Python projetada para extrair credenciais (emails e senhas) e links de wordlists que não seguem um padrão fixo.
 
-A classe `parsing` foi desenvolvida para filtrar e extrair combinações de **email/senha** a partir de wordlists que não possuem um padrão fixo e definido. Diferente de filtros simples, essa classe permite identificar padrões mistos e inconsistentes, facilitando a extração de credenciais em grandes volumes de dados sem padrão.
+## 🔹 Características
+✅ **Filtragem inteligente de credenciais** → Identifica e extrai combinações de email e senha mesmo em wordlists desorganizadas.  
+✅ **Identifica links (URLs) automaticamente** → Capaz de detectar protocolos como HTTP, HTTPS, FTP, SMTP, IMAP, OAuth e muito mais.  
+✅ **Reconhecimento de diversos delimitadores** → Suporte a `:`, `;`, `|`, ` `, entre outros.  
+✅ **Correção de inconsistências** → Remove caracteres extras no final de emails, senhas e links para manter a precisão.  
 
-O algoritmo é capaz de identificar e extrair credenciais em diversos formatos, como:
+## 🔹 Formatos de entrada suportados
+A ferramenta é capaz de identificar credenciais e links mesmo que estejam misturados em diferentes formatos, como:
 
 ```
-┌─[user@debian]─[~]
-└──╼ $ cat dados.txt 
 email@email.com P@ssw0rd123
 P@ssw0rd123:email@email.com
 email@email.com:email2@email2.net;P@ssw0rd123
 email@email.com|P@ssw0rd123|email@email.com
 P@ssw0rd123 email@email.com email@email.com
+https://example.com:email@email.com;password123
 ```
 
-
-
-## Funcionalidades
-
-- **Filtragem inteligente de credenciais**: Identifica e extrai combinações de email e senha mesmo quando não há um padrão fixo na wordlist.
-- **Identifica endereços de email válidos**: Verifica se o email segue padrões válidos antes da extração.
-- **Suporte a diversos delimitadores**: Reconhece delimitadores como `:`, `;`, `|` e ` ` para separação de credenciais.
-- **Correção de inconsistências**: Remove delimitadores extras no final de emails e senhas.
-
-## Instalação
-
-Não são necessárias bibliotecas externas. Basta clonar ou baixar o arquivo `parsing.py` e importá-lo em seu projeto.
+## 🔹 Instalação
+A ferramenta **não** necessita de bibliotecas externas. Para utilizá-la, basta clonar o repositório:
 
 ```bash
-# Clonar o repositório
-$ git clone https://github.com/seu-repositorio.git
+git clone https://github.com/them3x/CredExtractor.git
+cd CredExtractor
 ```
 
-## Uso
+## 🔹 Como usar
 
-1. Com a classe no mesmo diretorio **Importe a classe `parsing` em seu projeto:**
+Crie um arquivo Python e importe o **CredExtractor**:
 
 ```python
 from parsing import parsing
-```
 
-2. **Crie uma instância da classe:**
-
-```python
 parser = parsing()
+
+linha = "https://example.com email@email.com:password123"
+prot, link, email1, email2, passwd = parser.parse(linha)
+
+print("Protocolo:", prot)
+print("Link:", link)
+print("Email Principal:", email1)
+print("Email Secundário:", email2)
+print("Senha:", passwd)
 ```
 
-3. **Chame o método `parse()` para processar a linha de sua wordlist:**
+**Saída esperada:**
+```
+Protocolo: https://
+Link: example.com
+Email Principal: email@email.com
+Email Secundário: None
+Senha: password123
+```
+
+## 🔹 Funcionalidades avançadas
+### **1️⃣ Extração de Links**
+- Identifica links completos com diversos protocolos (`http://`, `https://`, `ftp://`, `smtp://`, `imap://`, `oauth://`, etc.).
+- Remove caracteres extras para garantir que o link seja extraído corretamente.
+
+### **2️⃣ Extração de Credenciais**
+- Analisa strings para identificar e extrair **emails e senhas**, mesmo em formatos incomuns.
+- Suporta emails principais e secundários.
+- Detecta combinações de delimitadores (`:`, `;`, `|`, ` `).
+
+### **3️⃣ Verificação de Emails**
+- Valida se o email possui formato correto.
+- Verifica domínio e estrutura (`user@domain.tld`).
+
+## 🔹 Exemplo de Uso em Wordlists
+Se você tem um arquivo **wordlist.txt** e quer extrair todas as credenciais e links:
 
 ```python
-with open("wordlist.txt", "r") as f:
-    for line in f:
-        email1, email2, senha = parser.parse(line)
-        print(email1, email2, senha)
+import os
+from parsing import parsing
 
+parser = parsing()
+
+with open("wordlist.txt", "r", encoding="utf-8", errors="ignore") as file:
+    for line in file:
+        prot, link, email1, email2, passwd = parser.parse(line)
+        if email1 and passwd:
+            print(f"{prot} {link} - {email1} / {passwd}")
 ```
 
-🔹 **Saída:** a função retorna 3 valores <email> <email> <senha>
-```
-exemplo@email.com None senha123
-```
-
-4. **Testando diferentes padrões de entrada:**
-
-```python
-print(parser.parse("senha123:usuario@email.com"))  # Inverte os valores
-print(parser.parse("primeiro@email.com;senha321")) # Identifica email e senha
-print(parser.parse("conta@email.com:backup@email.com;passw0rd")) # Dois emails e senha
-```
-
-🔹 **Saída esperada:**
-```
-('usuario@email.com', None, 'senha123')
-('primeiro@email.com', None, 'senha321')
-('conta@email.com', 'backup@email.com', 'passw0rd')
-(None, None, None)
-
-```
+## 📌 Contato e Contribuição
+Caso tenha sugestões ou melhorias, sinta-se à vontade para abrir um **pull request** ou entrar em contato!
 
 
 
